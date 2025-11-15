@@ -57,6 +57,7 @@ print(f"Elapsed time: {elapsed_time:.2f} seconds")
 predictions = []
 input_seq = X[-1:].clone()
 with torch.no_grad():
+    preds = model(X)
     for _ in range(200):
         # Predict the next value
         next_val = model(input_seq)
@@ -65,6 +66,12 @@ with torch.no_grad():
         # Slide the window forward: drop first, append new
         input_seq = torch.cat(
         [input_seq[:, 1:, :], next_val.unsqueeze(0)], dim=1)
+
+    # Compute R^2 (coefficient of determination)
+    ss_res = torch.sum((Y - preds) ** 2).item()
+    ss_tot = torch.sum((Y - torch.mean(Y)) ** 2).item()
+    r2 = 1 - ss_res / ss_tot
+    print(f"\nAccuracy Score: {r2 * 100:.2f}%")
 
 with torch.no_grad():
     preds = model(X).squeeze(-1).numpy()
